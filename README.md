@@ -1,118 +1,76 @@
-### 1. Define Interfaces
+# OptionPricingPY
 
-Start by defining interfaces for the models, valuation engines, and products. This will allow you to create different implementations without changing the core logic.
+![Badge en Desarollo](https://img.shields.io/badge/STATUS-%BETA-green)
+![Python](https://img.shields.io/badge/Python-3.11.4-blue)
 
-```python
-# Model Interface
-class OptionModel:
-    def price(self, option, market_data):
-        raise NotImplementedError("Subclasses should implement this!")
+Lightweight, extensible framework for option pricing and valuation engines.  
+This repository provides interfaces and concrete implementations for option models, valuation engines, and product definitions, with architecture and technical details stored in the docs/ folder.
 
-# Valuation Engine Interface
-class ValuationEngine:
-    def value(self, model, option, market_data):
-        raise NotImplementedError("Subclasses should implement this!")
+## Key ideas
+- Separation of concerns: models, valuation engines, and products are decoupled via simple interfaces.
+- Extensible: add new models or valuation engines by implementing the provided interfaces.
+- Documentation-first: design and technical details live under `docs/`.
 
-# Product Interface
-class OptionProduct:
-    def get_parameters(self):
-        raise NotImplementedError("Subclasses should implement this!")
+## Features
+- Interface definitions for models, engines, and products
+- Example concrete models (e.g., Black-Scholes)
+- Multiple valuation engine patterns (analytical, Monte Carlo, FFT)
+- Pluggable product types (vanilla options, etc.)
+- Tests and examples (see corresponding folders)
+
+## Quick start (Windows)
+1. Clone the repo
+```bash
+git clone <repo-url> "c:\Users\ramon\OneDrive\Desktop\Python projects\OptionPricingPY"
+cd "c:\Users\ramon\OneDrive\Desktop\Python projects\OptionPricingPY"
 ```
 
-### 2. Implement Models
-
-Create classes for each option pricing model (e.g., Black-Scholes, Heston).
-
-```python
-class BlackScholesModel(OptionModel):
-    def price(self, option, market_data):
-        # Implement Black-Scholes pricing logic
-        pass
-
-class HestonModel(OptionModel):
-    def price(self, option, market_data):
-        # Implement Heston pricing logic
-        pass
+2. Create and activate a virtual environment
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1   # PowerShell
+# or
+.venv\Scripts\activate.bat   # Command Prompt
 ```
 
-### 3. Implement Valuation Engines
-
-Create classes for each valuation engine (e.g., Analytical, FFT, Monte Carlo).
-
-```python
-class AnalyticalEngine(ValuationEngine):
-    def value(self, model, option, market_data):
-        return model.price(option, market_data)
-
-class MonteCarloEngine(ValuationEngine):
-    def value(self, model, option, market_data):
-        # Implement Monte Carlo valuation logic
-        pass
+3. Install dependencies
+```bash
+pip install -r requirements.txt
 ```
 
-### 4. Implement Products
-
-Create classes for different option products (e.g., plain vanilla options, exotic options).
-
-```python
-class VanillaOption(OptionProduct):
-    def __init__(self, strike, expiry):
-        self.strike = strike
-        self.expiry = expiry
-
-    def get_parameters(self):
-        return {'strike': self.strike, 'expiry': self.expiry}
-
-class ExoticOption(OptionProduct):
-    def __init__(self, strike, expiry, barrier_type):
-        self.strike = strike
-        self.expiry = expiry
-        self.barrier_type = barrier_type
-
-    def get_parameters(self):
-        return {'strike': self.strike, 'expiry': self.expiry, 'barrier_type': self.barrier_type}
+4. Run tests
+```bash
+pytest
 ```
 
-### 5. Create a Valuation Context
-
-Create a context or a manager class that will handle the combination of models, engines, and products.
-
-```python
-class OptionValuation:
-    def __init__(self, model: OptionModel, engine: ValuationEngine):
-        self.model = model
-        self.engine = engine
-
-    def value_option(self, option: OptionProduct, market_data):
-        return self.engine.value(self.model, option, market_data)
+5. Run examples / demos  
+Check the `examples/` or `scripts/` directory for runnable demos. Example:
+```bash
+python examples/demo.py
 ```
 
-### 6. Usage Example
+## Project layout (high-level)
+- docs/ — architecture and detailed technical docs (see docs/architecture.md)
+- option_pricing/ or src/ — core package (models, engines, products)
+- examples/ — runnable examples and small demos
+- tests/ — unit tests
+- requirements.txt — project dependencies
+- README.md — this file
 
-Now you can easily create different combinations of models, engines, and products.
+(Actual package/module names and exact locations are in the repo — adapt the commands above accordingly.)
 
-```python
-# Example usage
-market_data = {...}  # Define your market data here
+## Documentation
+All detailed design, API descriptions, and implementation notes are in the docs/ folder:
+- docs/architecture.md — architecture overview and interfaces
+- docs/* — additional design and usage docs
 
-# Create models and engines
-bs_model = BlackScholesModel()
-mc_engine = MonteCarloEngine()
+## Contributing
+- Fork -> feature branch -> open PR
+- Add tests for new features or bug fixes
+- Keep changes small and focused; update docs under `docs/` as needed
 
-# Create a vanilla option
-vanilla_option = VanillaOption(strike=100, expiry=1)
+## License
+See the LICENSE file in the repository root for license details.
 
-# Valuate the option
-valuation = OptionValuation(model=bs_model, engine=mc_engine)
-price = valuation.value_option(vanilla_option, market_data)
-
-print(f"The price of the vanilla option is: {price}")
-```
-
-### 7. Adding New Features
-
-To add new features, simply create new classes that implement the respective interfaces. For example, if you want to add a new model or a new valuation method, you just need to create a new class that adheres to the `OptionModel` or `ValuationEngine` interface.
-
-### Conclusion
-
-This design pattern promotes separation of concerns, making your codebase more maintainable and extensible. You can easily add new models, valuation methods, and products without affecting existing functionality.
+## Contact / Support
+Open an issue in the repository for bugs, feature requests, or questions.
