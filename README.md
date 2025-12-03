@@ -1,76 +1,126 @@
+// ...existing code...
+
 # OptionPricingPY
 
-![Badge en Desarollo](https://img.shields.io/badge/STATUS-BETA-green)
+![Badge en Desarollo](https://img.shields.io/badge/STATUS-BETA-green)  
 ![Python](https://img.shields.io/badge/Python-3.11.4-blue)
 
-Lightweight, extensible framework for option pricing and valuation engines.  
-This repository provides interfaces and concrete implementations for option models, valuation engines, and product definitions, with architecture and technical details stored in the docs/ folder.
+Lightweight, extensible framework for option pricing and valuation engines. Architecture and full technical details live in the docs/ folder.
 
-## Key ideas
-- Separation of concerns: models, valuation engines, and products are decoupled via simple interfaces.
-- Extensible: add new models or valuation engines by implementing the provided interfaces.
-- Documentation-first: design and technical details live under `docs/`.
+## What this repo contains
+- Core interfaces and example implementations for:
+  - Models (e.g., Black-Scholes, Heston)
+  - Valuation engines (analytical, Monte Carlo, FFT)
+  - Products (vanilla options, etc.)
+- Tests, examples, and documentation under docs/
 
-## Features
-- Interface definitions for models, engines, and products
-- Example concrete models (e.g., Black-Scholes)
-- Multiple valuation engine patterns (analytical, Monte Carlo, FFT)
-- Pluggable product types (vanilla options, etc.)
-- Tests and examples (see corresponding folders)
+See docs/architecture.md and docs/valuation_context.md for the detailed design and rationale.
 
-## Quick start (Windows)
-1. Clone the repo
-```bash
-git clone <repo-url> "c:\Users\ramon\OneDrive\Desktop\Python projects\OptionPricingPY"
-cd "c:\Users\ramon\OneDrive\Desktop\Python projects\OptionPricingPY"
+## Schematic overview of main classes
+
+- OptionModel (interface)
+  - price(option_parameters) -> float
+
+- ValuationEngine (interface)
+  - value(model: OptionModel, option_parameters) -> float
+
+- OptionProduct (interface)
+  - get_parameters() -> dict
+
+Concrete examples:
+- BlackScholesModel : OptionModel
+- HestonModel : OptionModel
+- AnalyticalValuationEngine : ValuationEngine
+- MonteCarloValuationEngine : ValuationEngine
+- VanillaOption : OptionProduct
+
+Relationship (conceptual):
+- OptionProduct -> provides parameters -> ValuationEngine
+- ValuationEngine -> uses OptionModel to compute value
+- OptionValuationContext -> orchestrates engine + model + product
+
+Simple ASCII diagram:
+```
+[OptionProduct] --get_parameters()--> {params}
+                                   |
+                                   v
+[OptionValuationContext] --calls--> [ValuationEngine] --uses--> [OptionModel]
+                                   |
+                                   v
+                                price (float)
 ```
 
-2. Create and activate a virtual environment
+## Minimal usage examples
+
+Python (quick example):
+```python
+from option_pricing.models import BlackScholesModel
+from option_pricing.engines import AnalyticalValuationEngine
+from option_pricing.products import VanillaOption
+from option_pricing.context import OptionValuationContext
+
+bs = BlackScholesModel()
+engine = AnalyticalValuationEngine()
+product = VanillaOption(strike=100, maturity=1.0, option_type='call')
+
+context = OptionValuationContext(engine)
+price = context.value_option(bs, product)
+print("Vanilla call price:", price)
+```
+
+Simple Monte Carlo sketch:
+```python
+from option_pricing.models import BlackScholesModel
+from option_pricing.engines import MonteCarloValuationEngine
+
+mc_engine = MonteCarloValuationEngine(n_paths=100_000, seed=42)
+price = mc_engine.value(BlackScholesModel(), product.get_parameters())
+```
+
+(Concrete import paths may vary — check the package layout in the repository.)
+
+## Quick start (Windows)
+1. Clone:
+```powershell
+git clone https://github.com/ramongonzalezgv/OptionPricingPY.git "c:\Users\<your_username>\Desktop\OptionPricingPY"
+cd "c:\Users\<your_username>\Desktop\OptionPricingPY"
+```
+2. Create & activate venv:
 ```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1   # PowerShell
 # or
-.venv\Scripts\activate.bat   # Command Prompt
+.venv\Scripts\activate.bat   # cmd.exe
 ```
-
-3. Install dependencies
-```bash
+3. Install deps:
+```powershell
 pip install -r requirements.txt
 ```
-
-4. Run tests
-```bash
+4. Run tests:
+```powershell
 pytest
 ```
 
-5. Run examples / demos  
-Check the `examples/` or `scripts/` directory for runnable demos. Example:
-```bash
-python examples/demo.py
-```
-
 ## Project layout (high-level)
-- docs/ — architecture and detailed technical docs (see docs/architecture.md)
-- option_pricing/ or src/ — core package (models, engines, products)
-- examples/ — runnable examples and small demos
+- docs/ — architecture.md, valuation_context.md, and other docs
+- option_pricing/ or src/ — core package (models, engines, products, context)
+- examples/ — runnable demos
 - tests/ — unit tests
-- requirements.txt — project dependencies
-- README.md — this file
-
-(Actual package/module names and exact locations are in the repo — adapt the commands above accordingly.)
+- requirements.txt, LICENSE, README.md
 
 ## Documentation
-All detailed design, API descriptions, and implementation notes are in the docs/ folder:
-- docs/architecture.md — architecture overview and interfaces
-- docs/* — additional design and usage docs
+Primary docs:
+- docs/architecture.md — overall architecture and interfaces
+- docs/valuation_context.md — how context and orchestration work
+- docs/* — implementation notes and API details
 
 ## Contributing
-- Fork -> feature branch -> open PR
-- Add tests for new features or bug fixes
-- Keep changes small and focused; update docs under `docs/` as needed
+- Fork, create branch, open PR
+- Add tests for new features/bugs
+- Update docs under docs/
 
 ## License
-See the LICENSE file in the repository root for license details.
+See LICENSE in the repository root.
 
-## Contact / Support
-Open an issue in the repository for bugs, feature requests, or questions.
+## Contact
+Open an issue for bugs, feature requests, or questions.
