@@ -5,76 +5,147 @@
 ![Badge en Desarollo](https://img.shields.io/badge/STATUS-BETA-green)  
 ![Python](https://img.shields.io/badge/Python-3.11.4-blue)
 
-Lightweight, extensible framework for option pricing and valuation engines. Architecture and full technical details live in the docs/ folder.
+Lightweight, extensible framework for option pricing and valuation engines. Full technical details live in the docs/ folder (see docs/architecture.md and docs/valuation_context.md).
 
-## What this repo contains
-- Core interfaces and example implementations for:
-  - Models (e.g., Black-Scholes, Heston)
-  - Valuation engines (analytical, Monte Carlo, FFT)
-  - Products (vanilla options, etc.)
-- Tests, examples, and documentation under docs/
+## Overview
 
-See docs/architecture.md and docs/valuation_context.md for the detailed design and rationale.
+This project separates three responsibilities:
 
-## Schematic overview of main classes
+- Models — encapsulate asset dynamics and pricing primitives.
+- Engines — implement valuation algorithms (analytical, Monte Carlo, FFT).
+- Products — describe option contract terms and convert them to canonical parameters.
 
-- OptionModel (interface)
-  - price(option_parameters) -> float
+An OptionValuationContext orchestrates the three so users can swap models/engines/products without changing orchestration code.
 
-- ValuationEngine (interface)
-  - value(model: OptionModel, option_parameters) -> float
+## Visual class examples
 
-- OptionProduct (interface)
-  - get_parameters() -> dict
+Below are minimal, illustrative Python snippets to show structure and interactions. These are deliberately small; full implementations live in the source package.
 
-Concrete examples:
-- BlackScholesModel : OptionModel
-- HestonModel : OptionModel
-- AnalyticalValuationEngine : ValuationEngine
-- MonteCarloValuationEngine : ValuationEngine
-- VanillaOption : OptionProduct
+### Interfaces (schematic)
 
-Relationship (conceptual):
-- OptionProduct -> provides parameters -> ValuationEngine
-- ValuationEngine -> uses OptionModel to compute value
-- OptionValuationContext -> orchestrates engine + model + product
-
-Simple ASCII diagram:
-```
-[OptionProduct] --get_parameters()--> {params}
-                                   |
-                                   v
-[OptionValuationContext] --calls--> [ValuationEngine] --uses--> [OptionModel]
-                                   |
-                                   v
-                                price (float)
-```
-
-## Minimal usage examples
-
-Python (quick example):
 ```python
-from option_pricing.models import BlackScholesModel
-from option_pricing.engines import AnalyticalValuationEngine
-from option_pricing.products import VanillaOption
-from option_pricing.context import OptionValuationContext
+class OptionModel:
+    """Model interface: pricing primitives and simulators."""
+    def price(self, params: dict) -> float:
+        raise NotImplementedError
 
-bs = BlackScholesModel()
+    def simulate_paths(self, params: dict, n_paths: int):
+        raise NotImplementedError
+
+    def characteristic_function(self, u, params: dict):
+        raise NotImplementedError
+
+
+class ValuationEngine:
+    """Engine interface: given a model and product params, return price (and optionally diagnostics)."""
+    def value(self, model: OptionModel, params: dict):
+        raise NotImplementedError
+
+
+class OptionProduct:
+    """Product interface: canonicalize contract terms into a params dict."""
+    def get_parameters(self) -> dict:
+        raise NotImplementedError
+```
+
+### Concrete examples (compact)
+
+```python
+class BlackScholesModel(OptionModel):
+    def __init__(self, spot: float, vol: float, rate: float):
+        self.spot = spot
+        self.vol = vol
+        self.rate = rate
+
+    def price(self, params):
+        # closed-form Black-Scholes formula (placeholder)
+        K = params["strike"]
+        T = params["maturity"]
+        option_type = params.get("option_type", "call")
+        # ...compute analytic price...
+        return 10.0  # example
+
+
+class AnalyticalValuationEngine(ValuationEngine):
+    def value(self, model: OptionModel, params: dict):
+        # For analytic engines, delegate to model.price
+        return model.price(params)
+
+
+class MonteCarloValuationEngine(ValuationEngine):
+    def __init__(self, n_paths: int = 10000, seed: int | None = None):
+        self.n_paths = n_paths
+        self.seed = seed
+
+    def value(self, model: OptionModel, params: dict):
+        # Use model.simulate_paths to estimate expectation (placeholder)
+        paths = model.simulate_paths(params, self.n_paths)
+        # ...discount payoff average...
+        return 9.8  # example
+```
+
+### Product example
+
+```python
+class VanillaOption(OptionProduct):
+    def __init__(self, strike: float, maturity: float, option_type: str = "call"):
+        self.strike = strike
+        self.maturity = maturity
+        self.option_type = option_type
+
+    def get_parameters(self) -> dict:
+        return {
+            "strike": self.strike,
+            "maturity": self.maturity,
+            "option_type": self.option_type
+        }
+```
+
+### Orchestration: OptionValuationContext
+
+```python
+class OptionValuationContext:
+    """
+    Orchestrates product -> engine -> model.
+    The context takes a ValuationEngine (which can carry configuration)
+    and provides a simple API to value products with a model.
+    """
+    def __init__(self, engine: ValuationEngine):
+        self.engine = engine
+
+    def value_option(self, model: OptionModel, product: OptionProduct):
+        params = product.get_parameters()
+        # Optionally enrich params here (e.g., attach model market data)
+        return self.engine.value(model, params)
+```
+
+## Usage examples
+
+Minimal, runnable-style example (adjust import paths for your package layout):
+
+```python
+# create product
+product = VanillaOption(strike=100, maturity=1.0, option_type="call")
+
+# create model (holds market data)
+bs_model = BlackScholesModel(spot=100.0, vol=0.2, rate=0.01)
+
+# choose engine and context
 engine = AnalyticalValuationEngine()
-product = VanillaOption(strike=100, maturity=1.0, option_type='call')
-
 context = OptionValuationContext(engine)
-price = context.value_option(bs, product)
+
+# value
+price = context.value_option(bs_model, product)
 print("Vanilla call price:", price)
 ```
 
-Simple Monte Carlo sketch:
-```python
-from option_pricing.models import BlackScholesModel
-from option_pricing.engines import MonteCarloValuationEngine
+Monte Carlo sketch:
 
+```python
 mc_engine = MonteCarloValuationEngine(n_paths=100_000, seed=42)
-price = mc_engine.value(BlackScholesModel(), product.get_parameters())
+context = OptionValuationContext(mc_engine)
+price = context.value_option(bs_model, product)
+print("MC estimate:", price)
 ```
 
 (Concrete import paths may vary — check the package layout in the repository.)
