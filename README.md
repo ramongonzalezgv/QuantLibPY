@@ -1,6 +1,6 @@
 # OptionPricingPY
 
-![Badge en Desarollo](https://img.shields.io/badge/STATUS-%BETA-green)
+![Badge en Desarollo](https://img.shields.io/badge/STATUS-BETA-green)
 ![Python](https://img.shields.io/badge/Python-3.11.4-blue)
 
 Lightweight, extensible framework for option pricing and valuation engines.  
