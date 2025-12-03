@@ -1,4 +1,4 @@
-# ...existing code...
+# ...existing code... 
 from typing import Any, Iterable, List, Optional, Callable, Dict
 import logging
 import json
@@ -9,16 +9,19 @@ import threading
 
 def _make_cache_key(product: Any, model: Any, extra_kwargs: Dict) -> str:
     """
-    Build a stable key from product.get_parameters() (if available) or vars(product),
-    and from model.__dict__ (if available). Falls back to repr() for unknowns.
+    Build a stable key from product.get_parameters() and model.get_parameters().
     """
+    # 1. Product representation
     try:
+        # Uses get_parameters if it exists, if not vars()
         prod_repr = product.get_parameters() if hasattr(product, "get_parameters") else vars(product)
     except Exception:
+        # If all else fails, use repr()
         prod_repr = repr(product)
 
+    # 2. Model representation
     try:
-        model_repr = vars(model)
+        model_repr = model.get_parameters() if hasattr(model, "get_parameters") else vars(model)
     except Exception:
         model_repr = repr(model)
 

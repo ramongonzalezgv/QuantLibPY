@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict
+from typing import Dict, Any
 import numpy as np
 import scipy.stats as si
 from ..products.products import EuropeanOption
@@ -17,6 +17,14 @@ class StochasticModel(ABC):
         """Función característica del modelo."""
         pass
 
+    @abstractmethod
+    def get_parameters(self) -> Dict[str, Any]:
+        """
+        Método obligatorio para devolver los parámetros de mercado (volatilidad, 
+        tasas, etc.) para la clave de caché.
+        """
+        pass
+
 
 class BlackScholesModel(StochasticModel):
     """Modelo Black-Scholes clásico."""
@@ -25,6 +33,14 @@ class BlackScholesModel(StochasticModel):
         self.sigma = sigma
         self.r = r
         self.q = q
+
+    def get_parameters(self) -> Dict[str, Any]:
+        """Return model parameters for caching."""
+        return {
+            'sigma': self.sigma,
+            'r': self.r,
+            'q': self.q
+        }
     
     def characteristic_function(self, u: complex, params: Dict) -> complex:
         """Función característica BS con dividendos."""
@@ -48,6 +64,13 @@ class BlackModel(StochasticModel):
     def __init__(self, sigma: float, r: float):
         self.sigma = sigma
         self.r = r
+
+    def get_parameters(self) -> Dict[str, Any]:
+        """Return model parameters for caching."""
+        return {
+            'sigma': self.sigma,
+            'r': self.r
+        }
     
     def characteristic_function(self, u: complex, params: Dict) -> complex:
         """Función característica Black."""
@@ -75,6 +98,18 @@ class HestonModel(StochasticModel):
         self.v0 = v0
         self.r = r
         self.q = q
+    
+    def get_parameters(self) -> Dict[str, Any]:
+        """Return model parameters for caching."""
+        return {
+            'kappa': self.kappa,
+            'theta': self.theta,
+            'sigma': self.sigma,
+            'rho': self.rho,
+            'v0': self.v0,
+            'r': self.r,
+            'q': self.q
+        }
     
     def characteristic_function(self, u: complex, params: Dict) -> complex:
         """Función característica de Heston."""

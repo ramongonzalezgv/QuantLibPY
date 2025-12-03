@@ -19,3 +19,6 @@ utils/
 cli.py
 
 core/
+
+# Images
+.png
