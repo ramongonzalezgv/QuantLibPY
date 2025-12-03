@@ -1,0 +1,21 @@
+# Virtual environment
+venv/
+.venv/
+
+# Cache/compiled files
+__pycache__/
+*.pyc
+*.pyd
+*.egg
+
+# Local logs/data/settings directories
+.vscode/
+.env
+
+# Tests
+tests/
+utils/
+
+cli.py
+
+core/
