@@ -2,35 +2,32 @@
 OptionPricingPY - Option pricing models and utilities
 """
 
-__version__ = "0.1.0"
-__author__ = "Ramon"
+__version__ = "0.2.0"
+__author__ = "Ramon Gonzalez"
 
 # 2. Importación directa de Clases/Funciones Clave
 #    Esto permite un acceso directo como: 'from mi_libreria import BlackScholesModel'
 
 # Importar desde models
-from .models import (
-    StochasticModel,
-    BlackScholesModel,
-    BlackModel,
-    HestonModel,
-    GreeksCalculator,
-)
+from .models.StochasticModel import StochasticModel
+from .models.BlackScholesModel import BlackScholesModel
+from .models.BlackModel import BlackModel
+from .models.HestonModel import HestonModel
 
 # Importar desde products
-from .products import (
-    FinancialProduct,
-    EuropeanOption,
-    AsianOption,
-)
+from .products.FinancialProduct import FinancialProduct
+from .products.EuropeanOption import EuropeanOption
+from .products.AsianOption import AsianOption
+from .products.AmericanOption import AmericanOption
 
 # Importar desde engines
-from .engines import (
-    PricingEngine,
-    AnalyticalEngine,
-    FFTEngine,
-    MonteCarloEngine
-)
+from .engines.PricingEngine import PricingEngine
+from .engines.AnalyticalEngine import AnalyticalEngine
+from .engines.FFTEngine import FFTEngine
+from .engines.MonteCarloEngine import MonteCarloEngine
+from .engines.BinomialEngine import BinomialEngine
+
+from .greeks.GreeksCalculator import GreeksCalculator
 
 # 3. Definición del __all__ principal
 #    Esto combina las clases/funciones de todos los subpaquetes
@@ -42,21 +39,20 @@ __all__ = [
     "BlackScholesModel",
     "BlackModel",
     "HestonModel",
-    "GreeksCalculator",
     
     # Productos
     "FinancialProduct",
     "EuropeanOption",
     "AsianOption",
+    "AmericanOption",
     
     # Engines
     "PricingEngine",
     "AnalyticalEngine",
     "FFTEngine",
     "MonteCarloEngine",
-    
-    # Opcional: También puedes exponer los subpaquetes directamente
-    "models",
-    "products",
-    "engines",
+    "BinomialEngine",
+
+    #Greeks
+    "GreeksCalculator"
 ]

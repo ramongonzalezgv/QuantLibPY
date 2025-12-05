@@ -1,4 +1,3 @@
-# ...existing code... 
 from typing import Any, Iterable, List, Optional, Callable, Dict
 import logging
 import json
@@ -93,7 +92,7 @@ class OptionValuationContext:
         if cache_flag:
             try:
                 key = _make_cache_key(product, model, kwargs)
-                cached = self.cache.get(key)
+                cached = self.cache.get(key) # type: ignore
                 if cached is not None:
                     if log:
                         self.logger.debug("Cache hit for key=%s", key)
@@ -112,7 +111,7 @@ class OptionValuationContext:
 
         if cache_flag and key is not None:
             try:
-                self.cache.set(key, price)
+                self.cache.set(key, price) #type: ignore
             except Exception as e:
                 self.logger.debug("Failed to set cache: %s", e)
 
@@ -129,7 +128,7 @@ class OptionValuationContext:
         parallel: Optional[bool] = None,
         progress_callback: Optional[Callable[[int, float], None]] = None,
         **kwargs
-    ) -> List[float]:
+    ) -> List:
         """
         Value a collection of products. Returns list of prices in the same order.
         - parallel=True will use a ThreadPoolExecutor by default (safer for pickling).
@@ -181,10 +180,10 @@ class OptionValuationContext:
                     self.logger.exception("Task failed: %s", e)
                     price = None
                     idx = futures[fut]
-                results[idx] = price
+                results[idx] = price # type: ignore
                 if progress_callback:
                     try:
-                        progress_callback(idx, price)
+                        progress_callback(idx, price) # type: ignore
                     except Exception:
                         pass
 

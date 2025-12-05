@@ -1,9 +1,6 @@
-// ...existing code...
-
 # OptionPricingPY
 
-![Badge en Desarollo](https://img.shields.io/badge/STATUS-BETA-green)  
-![Python](https://img.shields.io/badge/Python-3.11.4-blue)
+![Badge en Desarollo](https://img.shields.io/badge/Status-Beta-green) ![Python](https://img.shields.io/badge/Python-3.11.4-blue) ![Badge versiom](https://img.shields.io/badge/version-v.0.2.0-green) ![Python](https://img.shields.io/badge/Python-3.11.4-blue)
 
 Lightweight, extensible framework for option pricing and valuation engines. Full technical details live in the docs/ folder (see docs/architecture.md and docs/valuation_context.md).
 
