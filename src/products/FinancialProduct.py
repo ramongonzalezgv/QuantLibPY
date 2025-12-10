@@ -3,17 +3,17 @@ from typing import Dict, Any
 import numpy as np
 
 class FinancialProduct(ABC):
-    """Clase base para productos financieros."""
+    """Base class for financial products."""
     
     @abstractmethod
     def payoff(self, spot_prices: np.ndarray) -> np.ndarray:
-        """Calcula el payoff del producto."""
+        """Calculates the payoff of the product."""
         pass
 
     @abstractmethod
     def get_parameters(self) -> Dict[str, Any]:
         """
-        Método obligatorio para devolver los parámetros esenciales 
-        del contrato (K, T, etc.) para la clave de caché.
+        Mandatory method to return essential parameters 
+        of the contract (K, T, etc.) for the cache key.
         """
         pass

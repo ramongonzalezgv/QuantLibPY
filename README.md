@@ -1,6 +1,6 @@
 # OptionPricingPY
 
-![Badge en Desarollo](https://img.shields.io/badge/Status-Beta-yellow) ![Python](https://img.shields.io/badge/Python-3.11.4-blue) ![Badge versio](https://img.shields.io/badge/version-v.0.2.0-green)
+![Badge en Desarollo](https://img.shields.io/badge/Status-Beta-yellow) ![Badge versio](https://img.shields.io/badge/version-v.0.2.0-green) ![Python](https://img.shields.io/badge/Python-3.11.4-blue)
 
 Lightweight, extensible framework for option pricing and valuation engines. Full technical details live in the docs/ folder (see docs/architecture.md and docs/valuation_context.md).
 
@@ -8,9 +8,9 @@ Lightweight, extensible framework for option pricing and valuation engines. Full
 
 This project separates three responsibilities:
 
-- Models — encapsulate asset dynamics and pricing primitives.
-- Engines — implement valuation algorithms (analytical, Monte Carlo, FFT).
-- Products — describe option contract terms and convert them to canonical parameters.
+- [Models](src/models/) — encapsulate asset dynamics and pricing primitives.
+- [Engines](src/engines/) — implement valuation algorithms (analytical, Monte Carlo, FFT).
+- [Products](src/products/) — describe option contract terms and convert them to canonical parameters.
 
 An OptionValuationContext orchestrates the three so users can swap models/engines/products without changing orchestration code.
 
@@ -21,34 +21,33 @@ Below are minimal, illustrative Python snippets to show structure and interactio
 ### Interfaces (schematic)
 
 ```python
-class OptionModel:
+class FinancialProduct:
+    """Product interface: Stores key parameters that define 
+    the financial product/option contract.
+    """
+    def __init__(self, 
+                 S: float,
+                 K: float,
+                 T: Union[float, str],
+                 option_type: str = 'call',
+                 qty: int = 1
+    )
+
+class StochasticModel:
     """Model interface: pricing primitives and simulators."""
-    def price(self, params: dict) -> float:
+    def characteristic_function(self, u: complex, params: dict):
         raise NotImplementedError
-
-    def simulate_paths(self, params: dict, n_paths: int):
-        raise NotImplementedError
-
-    def characteristic_function(self, u, params: dict):
-        raise NotImplementedError
-
 
 class ValuationEngine:
-    """Engine interface: given a model and product params, return price (and optionally diagnostics)."""
-    def value(self, model: OptionModel, params: dict):
+    """Engine interface: given a model and a product, returns the price."""
+    def calculate_price(self, model: StochasticModel, product: FinancialProduct):
         raise NotImplementedError
 
-
-class OptionProduct:
-    """Product interface: canonicalize contract terms into a params dict."""
-    def get_parameters(self) -> dict:
-        raise NotImplementedError
 ```
-
 ### Concrete examples (compact)
 
 ```python
-class BlackScholesModel(OptionModel):
+class BlackScholesModel(StochasticModel):
     def __init__(self, spot: float, vol: float, rate: float):
         self.spot = spot
         self.vol = vol
@@ -84,7 +83,7 @@ class MonteCarloValuationEngine(ValuationEngine):
 ### Product example
 
 ```python
-class VanillaOption(OptionProduct):
+class EuropeanOption(FinancialProduct):
     def __init__(self, strike: float, maturity: float, option_type: str = "call"):
         self.strike = strike
         self.maturity = maturity
