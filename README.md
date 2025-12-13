@@ -2,189 +2,157 @@
 
 ![Badge en Desarollo](https://img.shields.io/badge/Status-Beta-yellow) ![Badge versio](https://img.shields.io/badge/version-v.0.2.0-green) ![Python](https://img.shields.io/badge/Python-3.11.4-blue)
 
-Lightweight, extensible framework for option pricing and valuation engines. Full technical details live in the docs/ folder (see docs/architecture.md and docs/valuation_context.md).
+Lightweight, extensible framework for pricing options with swappable products, models, and engines. Designed for experimentation (analytical, FFT, binomial, Monte Carlo) with a simple orchestration context, caching, and optional parallelism.
 
-## Overview
+## Quick links
+- High-level docs: `docs/architecture.md`, `docs/valuationContext_ENG.md`
+- Product details: `src/products/README.md`
+- Model details: `src/models/README.md`
+- Engine details: `src/engines/README.md`
+- Valuation context: `src/valuation/README.md`
+- Greeks calculation: `src/greeks/README.md`
 
-This project separates three responsibilities:
+## What's inside
+- **Products**: European, American, Asian options implement payoffs and contract parameters.
+- **Models**: Black-Scholes, Black (76), Heston provide characteristic functions and helpers.
+- **Engines**: Analytical, Binomial, FFT, Monte Carlo implement pricing schemes.
+- **Context**: `OptionValuationContext` coordinates product + model + engine with optional caching and parallel batch pricing.
+- **Greeks**: Automatic calculation of Delta, Gamma, Theta, Vega, Rho with analytical and numerical strategies.
+- **Notebooks**: runnable examples under `notebooks/`.
 
-- [Models](src/models/) — encapsulate asset dynamics and pricing primitives.
-- [Engines](src/engines/) — implement valuation algorithms (analytical, Monte Carlo, FFT).
-- [Products](src/products/) — describe option contract terms and convert them to canonical parameters.
+## Minimal usage
 
-An OptionValuationContext orchestrates the three so users can swap models/engines/products without changing orchestration code.
-
-## Visual class examples
-
-Below are minimal, illustrative Python snippets to show structure and interactions. These are deliberately small; full implementations live in the source package.
-
-### Interfaces (schematic)
-
-```python
-class FinancialProduct:
-    """Product interface: Stores key parameters that define 
-    the financial product/option contract.
-    """
-    def __init__(self, 
-                 S: float,
-                 K: float,
-                 T: Union[float, str],
-                 option_type: str = 'call',
-                 qty: int = 1
-    )
-
-class StochasticModel:
-    """Model interface: pricing primitives and simulators."""
-    def characteristic_function(self, u: complex, params: dict):
-        raise NotImplementedError
-
-class ValuationEngine:
-    """Engine interface: given a model and a product, returns the price."""
-    def calculate_price(self, model: StochasticModel, product: FinancialProduct):
-        raise NotImplementedError
-
-```
-### Concrete examples (compact)
+After installation (see [Installation](#installation)), you can use the package:
 
 ```python
-class BlackScholesModel(StochasticModel):
-    def __init__(self, spot: float, vol: float, rate: float):
-        self.spot = spot
-        self.vol = vol
-        self.rate = rate
+from src.products.EuropeanOption import EuropeanOption
+from src.models.BlackScholesModel import BlackScholesModel
+from src.engines.AnalyticalEngine import AnalyticalEngine
+from src.valuation.OptionValuationContext import OptionValuationContext
 
-    def price(self, params):
-        # closed-form Black-Scholes formula (placeholder)
-        K = params["strike"]
-        T = params["maturity"]
-        option_type = params.get("option_type", "call")
-        # ...compute analytic price...
-        return 10.0  # example
+option = EuropeanOption(S=100, K=100, T=30, option_type="call", qty=1)
+model = BlackScholesModel(sigma=0.2, r=0.01, q=0.0)
+engine = AnalyticalEngine()
 
-
-class AnalyticalValuationEngine(ValuationEngine):
-    def value(self, model: OptionModel, params: dict):
-        # For analytic engines, delegate to model.price
-        return model.price(params)
-
-
-class MonteCarloValuationEngine(ValuationEngine):
-    def __init__(self, n_paths: int = 10000, seed: int | None = None):
-        self.n_paths = n_paths
-        self.seed = seed
-
-    def value(self, model: OptionModel, params: dict):
-        # Use model.simulate_paths to estimate expectation (placeholder)
-        paths = model.simulate_paths(params, self.n_paths)
-        # ...discount payoff average...
-        return 9.8  # example
+ctx = OptionValuationContext(engine, cache_enabled=True)
+price = ctx.value_option(option, model)
+print(f"Call price: {price:.4f}")
 ```
 
-### Product example
-
+**FFT example (Heston):**
 ```python
-class EuropeanOption(FinancialProduct):
-    def __init__(self, strike: float, maturity: float, option_type: str = "call"):
-        self.strike = strike
-        self.maturity = maturity
-        self.option_type = option_type
+from src.products.EuropeanOption import EuropeanOption
+from src.models.HestonModel import HestonModel
+from src.engines.FFTEngine import FFTEngine
+from src.valuation.OptionValuationContext import OptionValuationContext
 
-    def get_parameters(self) -> dict:
-        return {
-            "strike": self.strike,
-            "maturity": self.maturity,
-            "option_type": self.option_type
-        }
+option = EuropeanOption(S=100, K=95, T=180, option_type="call", qty=1)
+model = HestonModel(kappa=2.0, theta=0.04, sigma=0.6, rho=-0.7, v0=0.04, r=0.01, q=0.0)
+engine = FFTEngine(N=2**12, B=200)
+
+ctx = OptionValuationContext(engine)
+price = ctx.value_option(option, model)
 ```
 
-### Orchestration: OptionValuationContext
-
+**Monte Carlo (Asian):**
 ```python
-class OptionValuationContext:
-    """
-    Orchestrates product -> engine -> model.
-    The context takes a ValuationEngine (which can carry configuration)
-    and provides a simple API to value products with a model.
-    """
-    def __init__(self, engine: ValuationEngine):
-        self.engine = engine
+from src.products.AsianOption import AsianOption
+from src.models.BlackScholesModel import BlackScholesModel
+from src.engines.MonteCarloEngine import MonteCarloEngine
+from src.valuation.OptionValuationContext import OptionValuationContext
 
-    def value_option(self, model: OptionModel, product: OptionProduct):
-        params = product.get_parameters()
-        # Optionally enrich params here (e.g., attach model market data)
-        return self.engine.value(model, params)
+option = AsianOption(S=100, K=100, T=365, option_type="call", averaging_type="arithmetic")
+model = BlackScholesModel(sigma=0.25, r=0.015, q=0.0)
+engine = MonteCarloEngine(n_paths=5000, n_steps=252, seed=42)
+
+ctx = OptionValuationContext(engine, cache_enabled=False)
+price = ctx.value_option(option, model)
 ```
 
-## Usage examples
+## Installation
 
-Minimal, runnable-style example (adjust import paths for your package layout):
+This package is currently available directly from GitLab (not yet on PyPI). To use it:
 
-```python
-# create product
-product = VanillaOption(strike=100, maturity=1.0, option_type="call")
+**Note:** Replace `<your-username>` in the GitLab URL below with your actual GitLab username or the repository path.
 
-# create model (holds market data)
-bs_model = BlackScholesModel(spot=100.0, vol=0.2, rate=0.01)
+### Requirements
 
-# choose engine and context
-engine = AnalyticalValuationEngine()
-context = OptionValuationContext(engine)
+- Python 3.8 or higher (tested with Python 3.11.4)
+- Dependencies: `numpy>=1.21`, `scipy>=1.8`
 
-# value
-price = context.value_option(bs_model, product)
-print("Vanilla call price:", price)
+### Option 1: Install in development mode (recommended)
+
+This allows you to import the package as if it were installed, and changes to the code are immediately available.
+
+1. **Clone the repository:**
+```bash
+git clone https://github.com/ramongonzalezgv/OptionPricingPY.git
+cd OptionPricingPY
 ```
 
-Monte Carlo sketch:
-
-```python
-mc_engine = MonteCarloValuationEngine(n_paths=100_000, seed=42)
-context = OptionValuationContext(mc_engine)
-price = context.value_option(bs_model, product)
-print("MC estimate:", price)
-```
-
-(Concrete import paths may vary — check the package layout in the repository.)
-
-## Quick start (Windows)
-1. Clone:
-```powershell
-git clone https://github.com/ramongonzalezgv/OptionPricingPY.git "c:\Users\<your_username>\Desktop\OptionPricingPY"
-cd "c:\Users\<your_username>\Desktop\OptionPricingPY"
-```
-2. Create & activate venv:
-```powershell
+2. **Create and activate a virtual environment:**
+```bash
+# Windows (PowerShell)
 python -m venv .venv
-.venv\Scripts\Activate.ps1   # PowerShell
-# or
-.venv\Scripts\activate.bat   # cmd.exe
+.venv\Scripts\Activate.ps1
+
+# Windows (cmd.exe)
+python -m venv .venv
+.venv\Scripts\activate.bat
+
+# Linux/Mac
+python -m venv .venv
+source .venv/bin/activate
 ```
-3. Install deps:
-```powershell
+
+3. **Install the package in development mode:**
+```bash
+pip install -e .
+```
+
+This will automatically install all dependencies from `requirements.txt` and make the package importable.
+
+### Option 2: Install dependencies only
+
+If you prefer to work with the source code directly without installing the package:
+
+1. Clone the repository (same as above)
+2. Create and activate virtual environment (same as above)
+3. Install dependencies:
+```bash
 pip install -r requirements.txt
 ```
-4. Run tests:
-```powershell
+
+Then add the `src` directory to your Python path or use relative imports in your scripts.
+
+## Quick start
+
+After installation (see [Installation](#installation) above), see the [Minimal usage](#minimal-usage) section for code examples.
+
+### Run tests
+
+```bash
 pytest
 ```
 
-## Project layout (high-level)
-- docs/ — architecture.md, valuation_context.md, and other docs
-- option_pricing/ or src/ — core package (models, engines, products, context)
-- examples/ — runnable demos
-- tests/ — unit tests
-- requirements.txt, LICENSE, README.md
+### Explore examples
 
-## Documentation
-Primary docs:
-- docs/architecture.md — overall architecture and interfaces
-- docs/valuation_context.md — how context and orchestration work
-- docs/* — implementation notes and API details
+Check out the Jupyter notebooks in `notebooks/tests/` for more detailed examples and use cases.
+
+## Project layout (high-level)
+- `docs/` — architecture and valuation notes
+- `src/products/` — option contracts (see README there)
+- `src/models/` — stochastic models (see README there)
+- `src/engines/` — pricing engines (see README there)
+- `src/valuation/` — orchestration/context (see README there)
+- `src/greeks/` — sensitivity calculations (see README there)
+- `notebooks/` — runnable demos and tests
+- `tests/` — unit tests
 
 ## Contributing
 - Fork, create branch, open PR
 - Add tests for new features/bugs
-- Update docs under docs/
+- Update docs in `docs/` and relevant module READMEs
 
 ## License
 See LICENSE in the repository root.
