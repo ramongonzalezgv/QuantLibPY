@@ -1,16 +1,16 @@
 # OptionPricingPY
 
-![Badge en Desarollo](https://img.shields.io/badge/Status-Beta-yellow) ![Badge versio](https://img.shields.io/badge/version-v.0.2.0-green) ![Python](https://img.shields.io/badge/Python-3.11.4-blue)
+![Badge en Desarollo](https://img.shields.io/badge/Status-Beta-yellow) ![Badge versio](https://img.shields.io/badge/version-v.0.3.0-green) ![Python](https://img.shields.io/badge/Python-3.11.4-blue)
 
 Lightweight, extensible framework for pricing options with swappable products, models, and engines. Designed for experimentation (analytical, FFT, binomial, Monte Carlo) with a simple orchestration context, caching, and optional parallelism.
 
 ## Quick links
-- High-level docs: `docs/architecture.md`, `docs/valuationContext_ENG.md`
-- Product details: `src/products/README.md`
-- Model details: `src/models/README.md`
-- Engine details: `src/engines/README.md`
-- Valuation context: `src/valuation/README.md`
-- Greeks calculation: `src/greeks/README.md`
+- High-level docs: [architecture.md](docs/architecture.md), [valuationContext_ENG.md](docs/valuationContext_ENG.md)
+- Product details: [src/products/README.md](src/products/README.md)
+- Model details: [src/models/README.md](src/models/README.md)
+- Engine details: [src/engines/README.md](src/engines/README.md)
+- Valuation context: [src/valuation/README.md](src/valuation/README.md)
+- Greeks calculation: [src/greeks/README.md](src/greeks/README.md)
 
 ## What's inside
 - **Products**: European, American, Asian options implement payoffs and contract parameters.
@@ -71,9 +71,7 @@ price = ctx.value_option(option, model)
 
 ## Installation
 
-This package is currently available directly from GitLab (not yet on PyPI). To use it:
-
-**Note:** Replace `<your-username>` in the GitLab URL below with your actual GitLab username or the repository path.
+This package is currently available directly from GitHub (not yet on PyPI). To use it:
 
 ### Requirements
 
@@ -141,11 +139,11 @@ Check out the Jupyter notebooks in `notebooks/tests/` for more detailed examples
 
 ## Project layout (high-level)
 - `docs/` — architecture and valuation notes
-- `src/products/` — option contracts (see README there)
-- `src/models/` — stochastic models (see README there)
-- `src/engines/` — pricing engines (see README there)
-- `src/valuation/` — orchestration/context (see README there)
-- `src/greeks/` — sensitivity calculations (see README there)
+- `src/products/` — option contracts ([README](src/products/README.md))
+- `src/models/` — stochastic models ([README](src/models/README.md))
+- `src/engines/` — pricing engines ([README](src/engines/README.md))
+- `src/valuation/` — orchestration/context ([README](src/valuation/README.md))
+- `src/greeks/` — sensitivity calculations ([README](src/greeks/README.md))
 - `notebooks/` — runnable demos and tests
 - `tests/` — unit tests
 
