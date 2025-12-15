@@ -25,12 +25,15 @@ Lightweight, extensible framework for pricing options with swappable products, m
 After installation (see [Installation](#installation)), you can use the package:
 
 ```python
+from datetime import date, timedelta
 from src.products.EuropeanOption import EuropeanOption
 from src.models.BlackScholesModel import BlackScholesModel
 from src.engines.AnalyticalEngine import AnalyticalEngine
 from src.valuation.OptionValuationContext import OptionValuationContext
 
-option = EuropeanOption(S=100, K=100, T=30, option_type="call", qty=1)
+valuation_date = date(2025, 1, 15)
+expiry_date = valuation_date + timedelta(days=30)
+option = EuropeanOption(S=100, K=100, expiry_date=expiry_date, valuation_date=valuation_date, option_type="call", qty=1)
 model = BlackScholesModel(sigma=0.2, r=0.01, q=0.0)
 engine = AnalyticalEngine()
 
@@ -41,12 +44,15 @@ print(f"Call price: {price:.4f}")
 
 **FFT example (Heston):**
 ```python
+from datetime import date, timedelta
 from src.products.EuropeanOption import EuropeanOption
 from src.models.HestonModel import HestonModel
 from src.engines.FFTEngine import FFTEngine
 from src.valuation.OptionValuationContext import OptionValuationContext
 
-option = EuropeanOption(S=100, K=95, T=180, option_type="call", qty=1)
+valuation_date = date(2025, 1, 15)
+expiry_date = valuation_date + timedelta(days=180)
+option = EuropeanOption(S=100, K=95, expiry_date=expiry_date, valuation_date=valuation_date, option_type="call", qty=1)
 model = HestonModel(kappa=2.0, theta=0.04, sigma=0.6, rho=-0.7, v0=0.04, r=0.01, q=0.0)
 engine = FFTEngine(N=2**12, B=200)
 
@@ -56,12 +62,15 @@ price = ctx.value_option(option, model)
 
 **Monte Carlo (Asian):**
 ```python
+from datetime import date, timedelta
 from src.products.AsianOption import AsianOption
 from src.models.BlackScholesModel import BlackScholesModel
 from src.engines.MonteCarloEngine import MonteCarloEngine
 from src.valuation.OptionValuationContext import OptionValuationContext
 
-option = AsianOption(S=100, K=100, T=365, option_type="call", averaging_type="arithmetic")
+valuation_date = date(2025, 1, 15)
+expiry_date = valuation_date + timedelta(days=365)
+option = AsianOption(S=100, K=100, expiry_date=expiry_date, valuation_date=valuation_date, option_type="call", averaging_type="arithmetic")
 model = BlackScholesModel(sigma=0.25, r=0.015, q=0.0)
 engine = MonteCarloEngine(n_paths=5000, n_steps=252, seed=42)
 
