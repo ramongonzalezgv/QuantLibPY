@@ -11,11 +11,11 @@ import pandas_market_calendars as mcal
 # as long as it has these two attributes.
 class MarketCalendar(Protocol):
     @property
-    def days_in_year(self):
+    def days_in_year(self) -> int: #type: ignore
         """Usually 365 for scalar, 252 for equities."""
         pass
         
-    def count_days(self, start: date, end: date):
+    def count_days(self, start: date, end: date) -> int: #type: ignore
         """Count days between start and end according to market rules."""
         pass
 
@@ -35,8 +35,8 @@ class CustomHolidayCalendar:
     def days_in_year(self) -> int:
         return self._days_in_year
 
-    def count_days(self, start: date, end: date):
-        return np.busday_count(start, end, holidays=self.holidays)
+    def count_days(self, start: date, end: date)-> int:
+        return np.busday_count(start, end, holidays=self.holidays)  #type: ignore
 
     def next_trading_day(self, d: Union[str, date, datetime, pd.Timestamp]) -> date:
         dt = self._parse_date(d)
@@ -93,9 +93,9 @@ class WeekdayCalendar:
     def days_in_year(self) -> int:
         return self._days_in_year
 
-    def count_days(self, start: date, end: date):
+    def count_days(self, start: date, end: date) -> int:
         # np.busday_count excludes weekends and specific holidays
-        return np.busday_count(start, end, holidays=self.holidays)
+        return np.busday_count(start, end, holidays=self.holidays)  #type: ignore
 
     def is_trading_day(self, d: Union[str, date, datetime, pd.Timestamp]) -> bool:
         """Return True if d is a trading day (not weekend or holiday)."""
@@ -147,7 +147,7 @@ class PublicHolidayCalendar:
     def days_in_year(self) -> int:
         return self._days_in_year
 
-    def count_days(self, start: date, end: date):
+    def count_days(self, start: date, end: date)-> int:
         """
         Counts business days excluding weekends and country-specific holidays.
         """
@@ -175,7 +175,7 @@ class PublicHolidayCalendar:
         relevant_holidays = list(country_holidays.keys())
 
         # 3. Use numpy to count business days, excluding the holidays we found
-        return np.busday_count(start, end, holidays=relevant_holidays)
+        return np.busday_count(start, end, holidays=relevant_holidays)  #type: ignore
     
     def next_trading_day(self, d: Union[str, date, datetime, pd.Timestamp]) -> date:
         dt = self._parse_date(d)

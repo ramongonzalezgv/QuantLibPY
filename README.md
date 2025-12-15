@@ -1,4 +1,4 @@
-# OptionPricingPY
+# QuantLibPY
 
 ![Badge en Desarollo](https://img.shields.io/badge/Status-Beta-yellow) ![Badge versio](https://img.shields.io/badge/version-v.0.5.0-green) ![Python](https://img.shields.io/badge/Python-3.11.4-blue)
 

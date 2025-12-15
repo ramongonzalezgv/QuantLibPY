@@ -309,9 +309,5 @@ first_trading_day_next_week = calendar.next_trading_day(today)
 
 ## Integration with the Option Pricing System
 
-The MarketCalendar is integrated into:
-- **OptionValuationContext**: Stores the calendar for consistent time calculations
-- **Pricing Engines**: Use the calendar to calculate time-to-maturity
-- **Greeks Calculators**: Require accurate time measurement for Greeks calculations
+The MarketCalendar is integrated into **Financial Products**, which use the calendar to calculate time-to-maturity efficiently and feed it into the pricing engines.
 
-See `docs/valuationContext_ENG.md` and `docs/architecture.md` for more information on how calendars fit into the overall system.
