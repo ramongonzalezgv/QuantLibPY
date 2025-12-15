@@ -51,11 +51,14 @@ Path simulation pricing (`MonteCarloEngine.py`).
 ## Usage examples
 Analytical Black-Scholes pricing for a European call:
 ```python
+from datetime import date, timedelta
 from products.EuropeanOption import EuropeanOption
 from models.BlackScholesModel import BlackScholesModel
 from engines.AnalyticalEngine import AnalyticalEngine
 
-option = EuropeanOption(S=100, K=100, T=30, option_type="call", qty=1)
+valuation_date = date(2025, 1, 15)
+expiry_date = valuation_date + timedelta(days=30)
+option = EuropeanOption(S=100, K=100, expiry_date=expiry_date, valuation_date=valuation_date, option_type="call", qty=1)
 model = BlackScholesModel(sigma=0.2, r=0.01, q=0.0)
 engine = AnalyticalEngine()
 price = engine.calculate_price(option, model)
@@ -63,11 +66,14 @@ price = engine.calculate_price(option, model)
 
 FFT pricing with Heston:
 ```python
+from datetime import date, timedelta
 from products.EuropeanOption import EuropeanOption
 from models.HestonModel import HestonModel
 from engines.FFTEngine import FFTEngine
 
-option = EuropeanOption(S=100, K=95, T=180, option_type="call", qty=1)
+valuation_date = date(2025, 1, 15)
+expiry_date = valuation_date + timedelta(days=180)
+option = EuropeanOption(S=100, K=95, expiry_date=expiry_date, valuation_date=valuation_date, option_type="call", qty=1)
 model = HestonModel(kappa=2.0, theta=0.04, sigma=0.6, rho=-0.7, v0=0.04, r=0.01, q=0.0)
 engine = FFTEngine(N=2**12, B=200)
 price = engine.calculate_price(option, model)
@@ -76,23 +82,29 @@ price = engine.calculate_price(option, model)
 Monte Carlo pricing for an arithmetic Asian call under BS:
 ```python
 import numpy as np
+from datetime import date, timedelta
 from products.AsianOption import AsianOption
 from models.BlackScholesModel import BlackScholesModel
 from engines.MonteCarloEngine import MonteCarloEngine
 
-paths = MonteCarloEngine(n_paths=5000, n_steps=252, seed=42)
-option = AsianOption(S=100, K=100, T=365, option_type="call", averaging_type="arithmetic")
+valuation_date = date(2025, 1, 15)
+expiry_date = valuation_date + timedelta(days=365)
+option = AsianOption(S=100, K=100, expiry_date=expiry_date, valuation_date=valuation_date, option_type="call", averaging_type="arithmetic")
 model = BlackScholesModel(sigma=0.25, r=0.015, q=0.0)
-price = paths.calculate_price(option, model)
+engine = MonteCarloEngine(n_paths=5000, n_steps=252, seed=42)
+price = engine.calculate_price(option, model)
 ```
 
 Binomial example (American put):
 ```python
+from datetime import date, timedelta
 from products.AmericanOption import AmericanOption
 from models.BlackScholesModel import BlackScholesModel
 from engines.BinomialEngine import BinomialEngine
 
-option = AmericanOption(S=50, K=55, T=180, option_type="put")
+valuation_date = date(2025, 1, 15)
+expiry_date = valuation_date + timedelta(days=180)
+option = AmericanOption(S=50, K=55, expiry_date=expiry_date, valuation_date=valuation_date, option_type="put")
 model = BlackScholesModel(sigma=0.3, r=0.02, q=0.0)
 engine = BinomialEngine(n_steps=500)
 price = engine.calculate_price(option, model)

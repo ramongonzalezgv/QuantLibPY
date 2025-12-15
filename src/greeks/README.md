@@ -177,12 +177,15 @@ Where `N()` is CDF, `φ()` is PDF of standard normal.
 ### Example 1: Simple European Call (Analytical)
 
 ```python
+from datetime import date, timedelta
 from src.products.EuropeanOption import EuropeanOption
 from src.models.BlackScholesModel import BlackScholesModel
 from src.greeks.GreeksCalculator import GreeksCalculator
 
 # Create option and model
-option = EuropeanOption(S=100, K=100, T=30, option_type="call", qty=1)
+valuation_date = date(2025, 1, 15)
+expiry_date = valuation_date + timedelta(days=30)
+option = EuropeanOption(S=100, K=100, expiry_date=expiry_date, valuation_date=valuation_date, option_type="call", qty=1)
 model = BlackScholesModel(sigma=0.2, r=0.05, q=0.02)
 
 # Calculate Greeks
@@ -210,11 +213,14 @@ Rho: 0.0456
 ### Example 2: American Put (Binomial)
 
 ```python
+from datetime import date, timedelta
 from src.products.AmericanOption import AmericanOption
 from src.models.BlackScholesModel import BlackScholesModel
 from src.greeks.GreeksCalculator import GreeksCalculator
 
-option = AmericanOption(S=50, K=55, T=180, option_type="put")
+valuation_date = date(2025, 1, 15)
+expiry_date = valuation_date + timedelta(days=180)
+option = AmericanOption(S=50, K=55, expiry_date=expiry_date, valuation_date=valuation_date, option_type="put")
 model = BlackScholesModel(sigma=0.3, r=0.02, q=0.0)
 
 calculator = GreeksCalculator(default_n_steps=500, default_use_richardson=True)
@@ -245,10 +251,13 @@ greeks_binomial = calculator.all_greeks(
 
 ```python
 import numpy as np
+from datetime import date, timedelta
 
+valuation_date = date(2025, 1, 15)
+expiry_date = valuation_date + timedelta(days=30)
 strikes = np.linspace(80, 120, 20)
 options = [
-    EuropeanOption(S=100, K=K, T=30, option_type="call")
+    EuropeanOption(S=100, K=K, expiry_date=expiry_date, valuation_date=valuation_date, option_type="call")
     for K in strikes
 ]
 
@@ -266,13 +275,17 @@ for opt in options:
 ### Example 5: Greeks Surface (Delta vs Strike)
 
 ```python
+import numpy as np
+from datetime import date, timedelta
 import matplotlib.pyplot as plt
 
+valuation_date = date(2025, 1, 15)
+expiry_date = valuation_date + timedelta(days=30)
 strikes = np.linspace(70, 130, 50)
 deltas = []
 
 for K in strikes:
-    opt = EuropeanOption(S=100, K=K, T=30, option_type="call")
+    opt = EuropeanOption(S=100, K=K, expiry_date=expiry_date, valuation_date=valuation_date, option_type="call")
     greeks = calculator.all_greeks(opt, model)
     deltas.append(greeks['Delta'])
 
@@ -287,11 +300,14 @@ plt.show()
 ### Example 6: Risk Analysis
 
 ```python
+from datetime import date, timedelta
 # Portfolio of options
+valuation_date = date(2025, 1, 15)
+expiry_date = valuation_date + timedelta(days=30)
 portfolio = [
-    EuropeanOption(S=100, K=95, T=30, option_type="call", qty=10),
-    EuropeanOption(S=100, K=100, T=30, option_type="call", qty=5),
-    EuropeanOption(S=100, K=105, T=30, option_type="put", qty=8),
+    EuropeanOption(S=100, K=95, expiry_date=expiry_date, valuation_date=valuation_date, option_type="call", qty=10),
+    EuropeanOption(S=100, K=100, expiry_date=expiry_date, valuation_date=valuation_date, option_type="call", qty=5),
+    EuropeanOption(S=100, K=105, expiry_date=expiry_date, valuation_date=valuation_date, option_type="put", qty=8),
 ]
 
 # Aggregate Greeks

@@ -143,8 +143,11 @@ Main orchestrator that:
 ### Cache Hit/Miss Example
 
 ```python
+from datetime import date, timedelta
 # First call → MISS (calculates)
-option = EuropeanOption(S=100, K=100, T=30, option_type='call', qty=1)
+valuation_date = date(2025, 1, 15)
+expiry_date = valuation_date + timedelta(days=30)
+option = EuropeanOption(S=100, K=100, expiry_date=expiry_date, valuation_date=valuation_date, option_type='call', qty=1)
 bs_model = BlackScholesModel(sigma=0.2, r=0.05, q=0.02)
 
 ctx = OptionValuationContext(analytical_engine, cache_enabled=True)
@@ -160,7 +163,7 @@ p2 = ctx.value_option(option, bs_model)  # → HIT
 # p1 == p2 (exactly the same value)
 
 # Third call with different K → MISS
-option2 = EuropeanOption(S=100, K=110, T=30, option_type='call', qty=1)
+option2 = EuropeanOption(S=100, K=110, expiry_date=expiry_date, valuation_date=valuation_date, option_type='call', qty=1)
 p3 = ctx.value_option(option2, bs_model)  # → MISS
 # Generates DIFFERENT key (K=110 vs K=100)
 # Not in cache → calculates again
@@ -171,7 +174,10 @@ p3 = ctx.value_option(option2, bs_model)  # → MISS
 
 1. **Immutable Parameters**: if you modify `product` or `model` after creating the context, the cache won't automatically invalidate.
    ```python
-   opt = EuropeanOption(S=100, K=100, T=30, option_type='call', qty=1)
+   from datetime import date, timedelta
+   valuation_date = date(2025, 1, 15)
+   expiry_date = valuation_date + timedelta(days=30)
+   opt = EuropeanOption(S=100, K=100, expiry_date=expiry_date, valuation_date=valuation_date, option_type='call', qty=1)
    p1 = ctx.value_option(opt, bs_model)  # HIT/MISS depends on history
    
    opt.S = 110  # MANUAL MODIFICATION (not recommended)
@@ -285,7 +291,13 @@ return results (in same order as input)
 A key advantage of using OptionValuationContext is that you can switch engines at runtime **without changing client code**:
 
 ```python
+from datetime import date, timedelta
 # Use the same context, switch engine
+valuation_date = date(2025, 1, 15)
+expiry_date = valuation_date + timedelta(days=30)
+opt = EuropeanOption(S=100, K=100, expiry_date=expiry_date, valuation_date=valuation_date, option_type='call', qty=1)
+bs_model = BlackScholesModel(sigma=0.2, r=0.05, q=0.02)
+
 ctx = OptionValuationContext(AnalyticalEngine())
 p1 = ctx.value_option(opt, bs_model)  # Analytical
 

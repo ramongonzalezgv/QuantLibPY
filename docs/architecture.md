@@ -6,21 +6,24 @@ Start by defining interfaces for the different components: models, valuation eng
 ```python
 class OptionModel:
     def price(self, option_parameters):
-        raise NotImplementedError("Subclasses should implement this!")
+        # Implement price logic
+        pass
 ```
 
 #### Valuation Engine Interface
 ```python
 class ValuationEngine:
     def value(self, model: OptionModel, option_parameters):
-        raise NotImplementedError("Subclasses should implement this!")
+        # Implement valuation engine logic
+        pass
 ```
 
 #### Product Interface
 ```python
-class OptionProduct:
+class FinancialProduct:
     def get_parameters(self):
-        raise NotImplementedError("Subclasses should implement this!")
+        # Implement prodct parameters
+        pass
 ```
 
 ### 2. Implement Concrete Models

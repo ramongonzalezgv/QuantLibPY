@@ -94,13 +94,17 @@ bd2 = black.d2(F, K=100, ttm=1.0)
 
 SABR pricing using AnalyticalEngine (same pattern as other models):
 ```python
+from datetime import date, timedelta
 from models.SABRModel import LognormalSABRModel, NormalSABRModel
 from products.EuropeanOption import EuropeanOption
 from engines.AnalyticalEngine import AnalyticalEngine
 
+valuation_date = date(2025, 1, 15)
+expiry_date = valuation_date + timedelta(days=91)  # ~0.25 years
+
 # Lognormal SABR (β=1)
 sabr_ln = LognormalSABRModel(alpha=0.2, rho=-0.5, nu=0.3, r=0.05, F0=100)
-opt = EuropeanOption(S=100, K=100, T=0.25, option_type='call', F=100)
+opt = EuropeanOption(S=100, K=100, expiry_date=expiry_date, valuation_date=valuation_date, option_type='call', F=100)
 engine = AnalyticalEngine()
 price_ln = engine.calculate_price(opt, sabr_ln)
 
