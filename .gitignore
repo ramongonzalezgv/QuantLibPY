@@ -14,8 +14,8 @@ __pycache__/
 
 # Tests
 tests/
-notebooks/
-examples/
+/notebooks/
+/examples/
 cli.py
 
 core/

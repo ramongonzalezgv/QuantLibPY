@@ -144,8 +144,6 @@ Check out the Jupyter notebooks in `notebooks/tests/` for more detailed examples
 - `src/engines/` — pricing engines ([README](src/engines/README.md))
 - `src/valuation/` — orchestration/context ([README](src/valuation/README.md))
 - `src/greeks/` — sensitivity calculations ([README](src/greeks/README.md))
-- `notebooks/` — runnable demos and tests
-- `tests/` — unit tests
 
 ## Contributing
 - Fork, create branch, open PR
