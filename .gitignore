@@ -14,8 +14,6 @@ __pycache__/
 
 # Tests
 tests/
-utils/
-
 cli.py
 
 core/

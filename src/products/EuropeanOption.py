@@ -4,16 +4,19 @@ import numpy as np
 
 from .FinancialProduct import FinancialProduct
 
+from ..utils.MarketCalendar import MarketCalendar
+
 class EuropeanOption(FinancialProduct):
     """Vanilla European Option."""
     
     def __init__(self, 
                  S: float,
                  K: float,
-                 T: Union[float, str],
+                 expiry_date: Union[str, date],
+                 valuation_date: Union[str, date, None] = None,
+                 calendar: Optional[MarketCalendar] = None,
                  option_type: str = 'call',
                  qty: int = 1,
-                 premium: Optional[float] = None,
                  F: Optional[float] = None):
         
         if S < 0:
@@ -27,31 +30,59 @@ class EuropeanOption(FinancialProduct):
         
         self.S = S
         self.K = K
-        self.T = T
         self.option_type = option_type.lower()
         self.qty = qty
-        self.premium = premium
         self._F = F
-    
+        self.calendar = calendar
+
+        # --- Date Handling ---
+        self.expiry_date = self._parse_date(expiry_date)
+        
+        if valuation_date is None:
+            self.valuation_date = date.today()
+        else:
+            self.valuation_date = self._parse_date(valuation_date)
+
+        if self.valuation_date > self.expiry_date:
+            raise ValueError(f"Valuation date ({self.valuation_date}) cannot be after expiry ({self.expiry_date})")
+
+    def _parse_date(self, date_input: Union[str, date]) -> date:
+        """Helper to ensure we always work with date objects."""
+        if isinstance(date_input, str):
+            # Assumes ISO format YYYY-MM-DD or DD-MM-YYYY, adjust as needed
+            try:
+                return datetime.strptime(date_input, '%Y-%m-%d').date()
+            except ValueError:
+                return datetime.strptime(date_input, '%d-%m-%Y').date()
+        elif isinstance(date_input, datetime):
+            return date_input.date()
+        elif isinstance(date_input, date):
+            return date_input
+        else:
+            raise TypeError("Date must be a string or datetime.date object")
+
+    @property
+    def days_to_maturity(self) -> int:
+        """Returns the raw number of days based on the chosen calendar."""
+        if self.calendar:
+            return self.calendar.count_days(self.valuation_date, self.expiry_date)
+        else:
+            # Default: Actual calendar days
+            return (self.expiry_date - self.valuation_date).days
+
     @property
     def ttm(self) -> float:
-        """Time to maturity in years."""
-
-        if isinstance(self.T, str):
-            today = date.today()
-            maturity_date = datetime.strptime(self.T, '%d-%m-%Y').date()
-            return (maturity_date - today).days / 365.0
+        """
+        Time to maturity as a year fraction.
+        """
+        days = self.days_to_maturity
+        
+        if self.calendar:
+            # Example: 10 business days / 252
+            return max(0.0, days / self.calendar.days_in_year)
         else:
-            return self.T / 365
-    
-    @property
-    def maturity_date(self) -> Union[str, date]:
-        """Expiry date."""
-
-        if isinstance(self.T, str):
-            return self.T
-        else:
-            return date.today() + timedelta(days=self.T)
+            # Example: 14 calendar days / 365
+            return max(0.0, days / 365.0)
     
     @property
     def F(self) -> Optional[float]:
@@ -61,38 +92,35 @@ class EuropeanOption(FinancialProduct):
     
     def get_parameters(self) -> Dict[str, Any]:
         """
-        Devuelve un diccionario de parámetros esenciales para la clave de caché.
+        Returns a dictionary of essential parameters for the cache key.
         """
-        # Excluimos self.S (precio spot), self.premium y self._F ya que no son parte
-        # de la definición intrínseca del contrato de opción.
+        # We exclude self.S (spot price), self.premium and self._F 
+        # since they are not part of the intrinsic contract definition.
         return {
             "S": self.S,
             "K": self.K,
-            # Usamos T (el input original) en lugar de ttm, para mantener la clave estable.
-            # Si T es una fecha (str), se convierte a str para JSON.
-            "T": self.T,
+            # We use expiry_date instead of ttm to keep the cache key stable.
+            "expiry_date": self.expiry_date,
             "option_type": self.option_type,
             "qty": self.qty,
         }
     
     def payoff(self, spot_prices: np.ndarray) -> np.ndarray:
-        """Calcula el payoff a vencimiento."""
+        """Calculates the payoff at maturity."""
         if self.option_type == 'call':
             return self.qty * np.maximum(spot_prices - self.K, 0)
         else:
             return self.qty * np.maximum(self.K - spot_prices, 0)
     
     def info(self) -> str:
-        """Información del producto."""
+        """Information about the product."""
         info = f"""
                 European {self.option_type.capitalize()} Option
                 --------------------------------
                 Spot Price (S): {self.S}
                 Strike Price (K): {self.K}
-                Maturity: {self.T}
+                Maturity: {self.expiry_date}
                 Time to Maturity: {self.ttm * 365:.2f} days
                 Quantity: {self.qty}
         """
-        if self.premium:
-            info += f"Premium: {self.premium:.4f}\n"
         return info

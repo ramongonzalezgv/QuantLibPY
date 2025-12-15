@@ -1,6 +1,6 @@
 # OptionPricingPY
 
-![Badge en Desarollo](https://img.shields.io/badge/Status-Beta-yellow) ![Badge versio](https://img.shields.io/badge/version-v.0.3.0-green) ![Python](https://img.shields.io/badge/Python-3.11.4-blue)
+![Badge en Desarollo](https://img.shields.io/badge/Status-Beta-yellow) ![Badge versio](https://img.shields.io/badge/version-v.0.5.0-green) ![Python](https://img.shields.io/badge/Python-3.11.4-blue)
 
 Lightweight, extensible framework for pricing options with swappable products, models, and engines. Designed for experimentation (analytical, FFT, binomial, Monte Carlo) with a simple orchestration context, caching, and optional parallelism.
 
