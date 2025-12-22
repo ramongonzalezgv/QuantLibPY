@@ -4,7 +4,7 @@ import numpy as np
 
 from .FinancialProduct import FinancialProduct
 
-from ..utils.MarketCalendar import MarketCalendar
+from ..utils.marketcalendars.MarketCalendar import MarketCalendar
 
 class EuropeanOption(FinancialProduct):
     """Vanilla European Option."""

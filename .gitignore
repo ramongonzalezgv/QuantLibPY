@@ -14,6 +14,8 @@ __pycache__/
 
 # Tests
 tests/
+OLD/
+Under_developement/
 /notebooks/
 /examples/
 cli.py

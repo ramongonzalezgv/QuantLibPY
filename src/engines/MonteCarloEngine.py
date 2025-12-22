@@ -3,6 +3,7 @@ from ..products.EuropeanOption import EuropeanOption
 from ..products.AsianOption import AsianOption
 from ..models.BlackScholesModel import BlackScholesModel
 from ..models.HestonModel import HestonModel
+from ..models.SABRModel import SABRModel, NormalSABRModel, LognormalSABRModel
 import numpy as np
 
 
@@ -10,18 +11,18 @@ import numpy as np
 from .PricingEngine import PricingEngine
 
 class MonteCarloEngine(PricingEngine):
-    """Motor de Monte Carlo para simulación de modelos estocásticos."""
+    """Monte Carlo engine for stochastic models simulation."""
     
     def __init__(self, n_paths: int = 10000, n_steps: int = 252, seed: Optional[int] = None):
         """
         Parameters
         ----------
         n_paths : int
-            Número de trayectorias de Monte Carlo
+            Number of simulated Monte Carlo paths
         n_steps : int
-            Número de pasos temporales por trayectoria
+            Number of temporal steps in each path
         seed : int, optional
-            Semilla para reproducibilidad
+            Seed for reproductibility
         """
         self.n_paths = n_paths
         self.n_steps = n_steps
@@ -29,8 +30,8 @@ class MonteCarloEngine(PricingEngine):
     
     def calculate_price(self, product, model) -> float:
         """
-        Calcula el precio usando simulación Monte Carlo.
-        Soporta: EuropeanOption y AsianOption.
+        Calculate price using Monte Carlo simulation.
+        Supports: EuropeanOption y AsianOption.
         """
         ttm = product.ttm
         
@@ -59,47 +60,64 @@ class MonteCarloEngine(PricingEngine):
             elif isinstance(model, HestonModel):
                 # Heston debe seguir usando la simulación paso a paso, y tomar solo el último punto
                 S_T = self._simulate_heston(product.S, model, ttm)[:, -1] 
+            elif isinstance(model, SABRModel):
+                # Use SABR Monte Carlo to simulate forward F paths and price using Black/Bachelier depending on beta
+                F_T = self._simulate_sabr(product.S if product.F is None else product.F, model, ttm)
+                # For pricing, if beta==0 use Bachelier payoff on F; else map to Black-style payoff on forward
+                if getattr(model, 'beta', None) == 0 or isinstance(model, NormalSABRModel):
+                    # Bachelier payoff
+                    vol = model.alpha  # note: alpha is initial vol; simulation already includes vol randomness
+                    S_T = F_T
+                else:
+                    S_T = F_T
             else:
-                raise ValueError(f"Modelo {type(model).__name__} no soportado para EuropeanOption")
+                raise ValueError(f"Model {type(model).__name__} not supported for European Options")
                 
             # Calcular payoff usando solo el precio final
             payoffs = product.payoff(S_T)
 
         else:
-            raise ValueError(f"Tipo de producto {type(product).__name__} no soportado por MonteCarloEngine")
+            raise ValueError(f"Product type {type(product).__name__} not supported by MonteCarloEngine")
 
         # Descontar y promediar (el mismo código, ya que 'payoffs' es una matriz 1D en ambos casos)
         discount_factor = np.exp(-model.r * ttm)
         price = discount_factor * np.mean(payoffs)
         
         return price
-        
-    # def calculate_price(self, product, model) -> float:
-    #     """
-    #     Calcula el precio usando simulación Monte Carlo.
-    #     Soporta: BlackScholesModel y HestonModel.
-    #     """
-    #     if not isinstance(product, EuropeanOption):
-    #         raise ValueError("MonteCarloEngine actualmente solo soporta EuropeanOption")
-        
-    #     ttm = product.ttm
-        
-    #     if isinstance(model, BlackScholesModel):
-    #         S_T = self._simulate_bs_exact(product.S, model, ttm)
-    #     elif isinstance(model, HestonModel):
-    #         S = self._simulate_heston(product.S, model, ttm)
-    #         S_T = S[:, -1]
-    #     else:
-    #         raise ValueError(f"Modelo {type(model).__name__} no soportado por MonteCarloEngine")
-        
-    #     # Calcular payoff en todos los paths
-    #     payoffs = product.payoff(S_T)
-        
-    #     # Descontar y promediar
-    #     discount_factor = np.exp(-model.r * ttm)
-    #     price = discount_factor * np.mean(payoffs)
-        
-    #     return price
+
+    def _simulate_sabr(self, F0: float, model: SABRModel, T: float) -> np.ndarray:
+        """
+        Simulate SABR forward paths (F) using Euler-Maruyama.
+
+        Returns
+        -------
+        F_T : ndarray of shape (n_paths,)
+            Final forward values at time T
+        """
+        if self.seed is not None:
+            np.random.seed(self.seed)
+
+        dt = T / self.n_steps
+        n = self.n_steps
+
+        F = np.full((self.n_paths,), F0, dtype=float)
+        alpha = np.full((self.n_paths,), model.alpha, dtype=float)
+
+        for i in range(n):
+            Z1 = np.random.normal(0.0, 1.0, self.n_paths)
+            Z2 = np.random.normal(0.0, 1.0, self.n_paths)
+            dW1 = np.sqrt(dt) * Z1
+            dW2 = np.sqrt(dt) * (model.rho * Z1 + np.sqrt(max(0.0, 1 - model.rho**2)) * Z2)
+
+            # Forward update: dF = alpha * F^beta * dW1
+            F = F + alpha * (F**model.beta) * dW1
+
+            # Volatility update: dalpha = nu * alpha * dW2
+            alpha = alpha + model.nu * alpha * dW2
+            # Keep alpha positive
+            alpha = np.maximum(alpha, 1e-12)
+
+        return F
     
     def _simulate_bs_exact(self, S0: float, model: BlackScholesModel, T: float) -> np.ndarray:
         """

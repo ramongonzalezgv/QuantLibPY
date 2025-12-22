@@ -4,7 +4,7 @@ import numpy as np
 
 from .FinancialProduct import FinancialProduct
 
-from ..utils.MarketCalendar import MarketCalendar
+from ..utils.marketcalendars.MarketCalendar import MarketCalendar
 
 class AsianOption(FinancialProduct):
     """
@@ -147,12 +147,12 @@ class AsianOption(FinancialProduct):
     def info(self) -> str:
         """Information about the product."""
         info = f"""
-            Asian {self.option_type.capitalize()} Option ({self.averaging_type.capitalize()} Average)
-            --------------------------------
-            Spot Price (S): {self.S}
-            Strike Price (K): {self.K}
-            Maturity: {self.expiry_date}
-            Time to Maturity: {self.ttm * 365:.2f} days
-            Quantity: {self.qty}
+        Asian {self.option_type.capitalize()} Option ({self.averaging_type.capitalize()} Average)
+        --------------------------------
+        Spot Price (S): {self.S}
+        Strike Price (K): {self.K}
+        Maturity: {self.expiry_date}
+        Time to Maturity: {self.ttm * 365:.2f} days
+        Quantity: {self.qty}
         """
         return info
