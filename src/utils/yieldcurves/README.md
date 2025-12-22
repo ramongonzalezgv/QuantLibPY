@@ -88,13 +88,21 @@ InterpolatedYieldCurve(reference_date, pillars, interpolation='linear',
 **Parameters:**
 - `reference_date` (date): Reference date for the curve
 - `pillars` (List[Tuple[date, float]]): List of (date, zero_rate) pairs
-- `interpolation` (str): Method - 'linear' or 'cubic'
+- `interpolation` (str): Method - 'linear', 'cubic', or 'monotonic'
 - `day_count_convention` (str): Day count method
+
+**Interpolation Methods:**
+
+- **Linear**: Basic linear interpolation between pillars. Simple and stable but may produce artificial kinks in the curve shape.
+
+- **Cubic**: Cubic spline interpolation. Provides smoother curves with continuous second derivatives, useful for derivatives calculations.
+
+- **Monotonic (PCHIP)**: Piecewise Cubic Hermite Interpolation Polynomial that preserves monotonicity of the data. This method ensures that if rates are monotonically increasing or decreasing between pillars, the interpolated curve will also be monotonic. This is particularly valuable in yield curve construction because it avoids unphysical oscillations and ensures that the interpolated forwards do not create arbitrage opportunities.
 
 **Notes:**
 - Minimum 2 pillars required
 - Rates should be zero rates (continuously compounded)
-- Extrapolates beyond the last pillar
+- **Extrapolation**: Beyond the last liquid point, the curve uses flat instantaneous forward extrapolation. This means the forward rate remains constant at the level implied by the last pillar, which corresponds to assuming a constant zero rate extension beyond the last market data point. This is a conservative assumption often used in practice when extending curves beyond the most liquid market instruments.
 
 ---
 

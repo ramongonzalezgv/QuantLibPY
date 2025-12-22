@@ -1,6 +1,8 @@
-from .yieldcurves import YieldCurve, FlatYieldCurve, InterpolatedYieldCurve, BootstrappedYieldCurve
+from .FlatYieldCurve import FlatYieldCurve
+from .BootstrappedYieldCurve import BootstrappedYieldCurve
+from .InterpolatedYieldCurve import InterpolatedYieldCurve
+
 __all__ = [
-    "YieldCurve",
     "FlatYieldCurve",
     "InterpolatedYieldCurve",
     "BootstrappedYieldCurve",

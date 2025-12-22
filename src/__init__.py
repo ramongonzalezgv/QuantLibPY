@@ -2,7 +2,7 @@
 OptionPricingPY - Option pricing models and utilities
 """
 
-__version__ = "0.6.0"
+__version__ = "0.7.0"
 __author__ = "Ramon Gonzalez"
 
 # 2. Importación directa de Clases/Funciones Clave
