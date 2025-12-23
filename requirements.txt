@@ -1,8 +1,10 @@
 numpy>=1.21
 scipy>=1.8
 pandas>=1.3.0            # For data analysis in notebooks
-history                  # For MarketCalendar class
 pandas_market_calendars  # For MarketCalendar class
+matplotlib>=3.4.0        # For plotting in notebooks
+history                  # For MarketCalendar class
+
 
 # Optional dependencies for testing and notebooks
 # matplotlib>=3.5.0  # For plotting in notebooks
