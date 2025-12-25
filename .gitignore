@@ -18,6 +18,7 @@ OLD/
 Under_developement/
 /notebooks/
 /examples/
+/validation/
 cli.py
 
 core/
